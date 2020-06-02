@@ -1,0 +1,19 @@
+language: go
+go:
+- 1.13
+script:
+- go get -u
+- GOOS=linux go build -o vault-wrapper
+sudo: false
+before_deploy:
+- echo "Deploying $TRAVIS_TAG to GitHub releases"
+- tar czf vault-wrapper-linux.tar.gz vault-wrapper
+deploy:
+  provider: releases
+  api_key:
+    secure: SSR+RxaUMbKI4fYvYDH5wiIduM4Mg1zpNS90laSij40Eg7GUT6uMjiLldVvaR05BE7qUEdTTjPB90iAuqj14C/61OCbgWhGsJ0t4TC9Q8eHcCv0xnG9Dtk41IGpSixDhFnlhpf7RgChJfR1xypRFfKAMmoCuy8C72KBedmv5Yn6sZnvbX/gAfURuX6R7xxguKbvhYayniNr1vwj0KD9o7IZJ4Pq76pGilu3FFYVJust+u0ouetmCfYiSwg7rfYkzKGG6IJkn2KyQNtoC7ek7a/6KG5vZ/pyA9dmUis0QACwTpj6rsBN4nhHr1eIH47WRjDfN8Zu9tBucfWSRAHN1S0rFqapxei1JP7NmBNk3BYSTLzhyqs+sAyCAnbcCTCafh0h0ywcbSSQD5BST6rcjWH99IFk0hMTrxyGLN/QsNGxSnT7usqvqVMWIdecQdZXigpudZJBn68QFZBywodshKYKCDvXOaRISZtwp7WLsnmNsjvoWU36zGpI+ZXGBF+dpWdeTo3JW46DnjqghY2x3+w02E83bmMU4zbJ8j0veoesdkEIuSV+oo45VTbr9r0NBFVjlv0wQVuuo+OfoaLQkkHp1zKFcaraUytr7q0dCrbOS102K/iB6aRoXe6YZ5niEzrgFcf0Pdy7dMRQN9IVBK/VP0AENIOmjmpCUoOf0gdc=
+  file: vault-wrapper-linux.tar.gz
+  on:
+    repo: tionebsalocin/vault-wrapper
+    tags: true
+  skip_cleanup: 'true'
