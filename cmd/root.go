@@ -15,7 +15,9 @@ var realm string
 var spn string
 var krb5 string
 var keytab string
+var prefix string
 var token_only bool
+var export_only bool
 
 func init() {
 	RootCmd.PersistentFlags().StringSliceVarP(&path, "secret_path", "p", []string{}, "Secret path in Vault path/to/secret:key")
@@ -26,7 +28,9 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&spn, "spn", "s", "", "Vault Service Principal Name")
 	RootCmd.PersistentFlags().StringVarP(&krb5, "krb5", "k", "/etc/krb5.conf", "Path to krb5.conf")
 	RootCmd.PersistentFlags().StringVarP(&keytab, "keytab", "t", "", "Path to keytab file")
+	RootCmd.PersistentFlags().StringVarP(&prefix, "prefix", "e", "SECRET_", "Environment variable prefix")
 	RootCmd.PersistentFlags().BoolVarP(&token_only, "token-only", "o", false, "Only output vault token (no execution wrapped)")
+	RootCmd.PersistentFlags().BoolVarP(&export_only, "export-only", "x", false, "Only output command to export env variables (no execution wrapped)")
 }
 
 var RootCmd = &cobra.Command{
@@ -37,7 +41,7 @@ var RootCmd = &cobra.Command{
 		var exec_command []string
 		if len(args) > 0 {
 			exec_command = []string{"sh", "-c", args[0]}
-		} else if token_only == false {
+		} else if token_only == false && export_only == false {
 			log.Fatal("[VaultWrapper] Syntax Error: Missing command line to wrap")
 		}
 		runner.Run(runner.Config{
@@ -49,7 +53,9 @@ var RootCmd = &cobra.Command{
 			VaultSPN:       spn,
 			Krb5:           krb5,
 			Keytab:         keytab,
+			EnvPrefix:      prefix,
 			TokenOnly:      token_only,
+			ExportOnly:     export_only,
 			CommandLine:    exec_command,
 		})
 	},
