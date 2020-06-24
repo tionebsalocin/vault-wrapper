@@ -18,14 +18,14 @@ func signalWatch(cmd *exec.Cmd) {
 	}()
 }
 
-func getSecretsPathFromEnv() []Secret {
+func getSecretsPathFromEnv(prefix string) []Secret {
 	var secrets []Secret
 	for _, element := range os.Environ() {
 		variable := strings.Split(element, "=")
-		if strings.Index(variable[0], "SECRET_") == 0 && strings.Index(variable[1], "vault:") == 0 {
+		if strings.Index(variable[0], prefix) == 0 && strings.Index(variable[1], "vault:") == 0 {
 			secret_path := strings.Split(variable[1], ":")
 			secrets = append(secrets, Secret{
-				Name: strings.Replace(variable[0], "SECRET_", "", 1),
+				Name: strings.Replace(variable[0], prefix, "", 1),
 				Path: secret_path[1],
 				Key:  secret_path[2],
 			})
@@ -43,16 +43,23 @@ func Run(config Config) {
 		os.Stdout.WriteString(token)
 		return
 	}
-	paths := getSecretsPathFromEnv()
+	paths := getSecretsPathFromEnv(config.EnvPrefix)
 	if len(paths) > 0 {
 		log.Println("[VaultWrapper] Collecting secrets...")
 		vaultClient := vaultClient(config, token)
 		for _, path := range paths {
 			secret = getSecret(vaultClient, path.Path, path.Key)
 			secrets = append(secrets, path.Name+"="+secret)
+			if config.ExportOnly {
+				os.Stdout.WriteString("export " + path.Name + "=" + secret + "\n")
+			}
 		}
 	} else {
 		log.Println("[VaultWrapper] No secret to collect")
+	}
+	if config.ExportOnly {
+		os.Stdout.WriteString("export VAULT_TOKEN=" + token + "\n")
+		return
 	}
 	cmd := exec.Command(config.CommandLine[0], config.CommandLine[1:]...)
 	cmd.Stdout = os.Stdout
